@@ -1,0 +1,6 @@
+{
+  "name": "AuraPlan AI — Celebration & Event Optimization Engine",
+  "description": "Intelligent event planner with real-time budget optimization, DAG timeline scheduling, and mid-flight stress simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
