@@ -17,6 +17,7 @@ import {
   ProposedAdjustment,
 } from '../types';
 import { fetchBudgetOptimizationRationale } from '../logic/geminiService';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import confetti from 'canvas-confetti';
 
 interface BudgetOptimizationModalProps {
@@ -36,21 +37,14 @@ export const BudgetOptimizationModal: React.FC<BudgetOptimizationModalProps> = (
 }) => {
   if (!isOpen) return null;
 
+  const modalRef = useModalFocusTrap(isOpen, onClose);
+
   // Local state for checkboxes
   const [adjustments, setAdjustments] = useState<ProposedAdjustment[]>(
     optimizationResult.adjustments.map((a) => ({ ...a, approved: a.approved ?? true }))
   );
   const [aiRationale, setAiRationale] = useState<string | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
-
-  // Keyboard accessibility: Close on Escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   const toggleApproval = (itemId: string) => {
     setAdjustments((prev) =>
@@ -93,7 +87,9 @@ export const BudgetOptimizationModal: React.FC<BudgetOptimizationModalProps> = (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-stone-200 overflow-hidden"
+        ref={modalRef}
+        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-stone-200 overflow-hidden focus:outline-none"
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="budget-opt-title"

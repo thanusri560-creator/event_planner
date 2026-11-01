@@ -14,7 +14,41 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-app.use(express.json({ limit: '1mb' }));
+// Security: HTTP security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+app.use(express.json({ limit: '256kb' })); // Sanitized payload size limit
+
+// Security: In-memory sliding-window rate limiter for /api/* endpoints
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 120;
+
+app.use('/api', (req, res, next) => {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const clientRecord = rateLimitMap.get(clientIp);
+
+  if (!clientRecord || now > clientRecord.resetTime) {
+    rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+
+  if (clientRecord.count >= MAX_REQUESTS_PER_WINDOW) {
+    return res.status(429).json({
+      success: false,
+      error: 'Rate limit exceeded. Please wait a moment before trying again.',
+    });
+  }
+
+  clientRecord.count++;
+  next();
+});
 
 // Initialize Gemini SDK with User-Agent header as required
 const apiKey = process.env.GEMINI_API_KEY;

@@ -2,7 +2,7 @@
 **Challenge 5: AI-Powered Celebration & Event Planner**
 
 [![Live App](https://img.shields.io/badge/Live_App-Ready-success?style=for-the-badge&logo=google-cloud)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
-[![Tests Passing](https://img.shields.io/badge/Automated_Tests-25%2F25_Passed-emerald?style=for-the-badge&logo=vitest)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
+[![Tests Passing](https://img.shields.io/badge/Automated_Tests-30%2F30_Passed-emerald?style=for-the-badge&logo=vitest)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
 [![Model](https://img.shields.io/badge/Model-Gemini_3.8_Flash-purple?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
 [![Accessibility](https://img.shields.io/badge/WCAG-2.2_AA_Compliant-blue?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 
@@ -14,6 +14,19 @@
 
 * **🚀 Shared Production App**: [https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
 * **🛠️ Development Environment**: [https://ais-dev-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app](https://ais-dev-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
+
+---
+
+## 🤖 Gen AI Services Utilized & Locations
+
+| Gen AI Capability | Model Service | Implementation Location | Operational Role |
+| :--- | :--- | :--- | :--- |
+| **Vendor Negotiation Talking Points** | `@google/genai` (Gemini 3.8 Flash via Express Server Proxy) | `/api/ai/negotiation-script` (`server.ts` & `BudgetOptimizationModal.tsx`) | Formulates respectful vendor scripts and talking points to execute budget rebalancing cuts. |
+| **Operational Stress Reasoning** | `@google/genai` (Gemini 3.8 Flash via Express Server Proxy) | `/api/ai/stress-analysis` (`server.ts` & `SimulationPage.tsx`) | Delivers qualitative deep-dives on crowd safety, hall egress, and fast-track tactics during multi-constraint shocks. |
+| **Celebration Event Synthesizer** | `@google/genai` (Gemini 3.8 Flash via Express Server Proxy) | `/api/ai/parse-brief` (`server.ts` & `CreateEventPage.tsx`) | Parses freeform natural-language event briefs into structured categories, DAG tasks, and budget allocations. |
+| **AI Copilot & Advisor** | `@google/genai` (Gemini 3.8 Flash via Express Server Proxy) | `/api/ai/copilot-chat` (`server.ts` & `AICopilotModal.tsx`) | Real-time planning advice with full event context injection, fallback resilience, and prompt engineering. |
+
+*Zero API keys are exposed to the browser. All client calls query server-side proxy routes with rate-limiting and LRU caching.*
 
 ---
 
@@ -108,19 +121,29 @@ npm test
 │   │   ├── eventPlanner.ts         # Event state manager, demo generator, persistence
 │   │   └── geminiService.ts        # Client-side API client for server endpoints
 │   ├── testing/
-│   │   ├── testRunner.ts           # 23-test automated test suite
+│   │   ├── testRunner.ts           # 30 automated tests (Unit, Integration, EdgeCase, Stress)
 │   │   └── runCliTests.ts          # CLI test runner for npm test
-│   ├── components/
-│   │   ├── Navbar.tsx              # Responsive navigation & active event pill
-│   │   ├── DemoScenarioBanner.tsx  # 1-click Challenge 5 scenario triggers
-│   │   ├── BudgetOptimizationModal.tsx # Itemized approval modal with AI rationale
-│   │   └── AICopilotModal.tsx      # Context-aware Gemini celebration consultant
+│   ├── components/                 # Accessible, decomposed UI components
+│   │   ├── budget/                 # Decomposed budget engine subcomponents
+│   │   │   ├── CategoryCardsGrid.tsx
+│   │   │   ├── AddExpenseItemForm.tsx
+│   │   │   └── ExpenseItemTable.tsx
+│   │   ├── timeline/               # Decomposed timeline & DAG subcomponents
+│   │   │   ├── GanttChartView.tsx
+│   │   │   ├── TaskTableView.tsx
+│   │   │   └── DependencyChainView.tsx
+│   │   ├── simulation/             # Decomposed simulation subcomponents
+│   │   │   ├── BeforeAfterMatrix.tsx
+│   │   │   └── RecoveryPlanList.tsx
+│   │   ├── AICopilotModal.tsx      # Focus-trapped interactive Gemini assistant
+│   │   ├── BudgetOptimizationModal.tsx # Focus-trapped adjustment review dialog
+│   │   └── ErrorBoundary.tsx       # Production error boundary with accessible fallback UI
 │   ├── pages/
 │   │   ├── LandingPage.tsx         # Modern hero & demo launcher
 │   │   ├── DashboardPage.tsx       # KPI cards, category progress, critical path alerts
-│   │   ├── BudgetPage.tsx          # Interactive line-item editor & priority selectors
-│   │   ├── TimelinePage.tsx        # Interactive Gantt & delay propagation simulator
-│   │   ├── SimulationPage.tsx      # Multi-variable What-If stress test lab
+│   │   ├── BudgetPage.tsx          # Composed budget management view
+│   │   ├── TimelinePage.tsx        # Composed CPM Gantt & delay simulator
+│   │   ├── SimulationPage.tsx      # Composed What-If stress test lab
 │   │   ├── VendorPage.tsx          # Vendor directory, SLAs, and backup swap controls
 │   │   ├── CreateEventPage.tsx     # Event creation wizard with AI brief assistant
 │   │   └── TestingPage.tsx         # In-app interactive test verification runner

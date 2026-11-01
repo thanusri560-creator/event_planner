@@ -12,6 +12,7 @@ import { SimulationPage } from './pages/SimulationPage';
 import { VendorPage } from './pages/VendorPage';
 import { CreateEventPage } from './pages/CreateEventPage';
 import { TestingPage } from './pages/TestingPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { EventPlan, ProposedAdjustment } from './types';
 import {
@@ -190,64 +191,78 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100/60 text-stone-900 font-sans selection:bg-purple-200">
-      {/* Top Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-        activeEvent={activeEvent}
-        onResetDemo={handleResetDemo}
-        onOpenAICopilot={() => setIsAICopilotOpen(true)}
-      />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-stone-100/60 text-stone-900 font-sans selection:bg-purple-200">
+        {/* WCAG 2.2 Skip-to-content link */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-purple-700 focus:text-white focus:px-4 focus:py-2 focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          Skip to main content
+        </a>
 
-      {/* Official Challenge 5 Demo Scenario Banner */}
-      {currentTab !== 'landing' && (
-        <DemoScenarioBanner
+        {/* Top Navbar */}
+        <Navbar
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
           activeEvent={activeEvent}
-          onTriggerScenario1_BudgetOverrun={handleTriggerScenario1_BudgetOverrun}
-          onTriggerScenario2_VenueDelay={handleTriggerScenario2_VenueDelay}
-          onTriggerScenario3_StressTest={handleTriggerScenario3_StressTest}
           onResetDemo={handleResetDemo}
+          onOpenAICopilot={() => setIsAICopilotOpen(true)}
         />
-      )}
 
-      {/* Floating Toast Notification */}
-      {activeNotification && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom-5 duration-300">
-          <div
-            className={`rounded-2xl p-4 shadow-xl border flex items-start gap-3 backdrop-blur-md ${
-              activeNotification.type === 'success'
-                ? 'bg-emerald-900/95 text-white border-emerald-700'
-                : activeNotification.type === 'warning'
-                ? 'bg-amber-900/95 text-white border-amber-700'
-                : 'bg-stone-900/95 text-white border-stone-700'
-            }`}
-          >
-            <div className="flex-1 text-xs">
-              <span className="font-bold text-sm block mb-0.5">
-                {activeNotification.title}
-              </span>
-              <p className="opacity-90">{activeNotification.message}</p>
-            </div>
-            <button
-              onClick={() => setActiveNotification(null)}
-              className="text-stone-400 hover:text-white text-xs font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Page Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        {currentTab === 'landing' && (
-          <LandingPage
-            onStartPlanning={() => setCurrentTab('create')}
-            onLaunchDemo={() => setCurrentTab('dashboard')}
+        {/* Official Challenge 5 Demo Scenario Banner */}
+        {currentTab !== 'landing' && (
+          <DemoScenarioBanner
             activeEvent={activeEvent}
+            onTriggerScenario1_BudgetOverrun={handleTriggerScenario1_BudgetOverrun}
+            onTriggerScenario2_VenueDelay={handleTriggerScenario2_VenueDelay}
+            onTriggerScenario3_StressTest={handleTriggerScenario3_StressTest}
+            onResetDemo={handleResetDemo}
           />
         )}
+
+        {/* Floating Toast Notification */}
+        {activeNotification && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom-5 duration-300"
+          >
+            <div
+              className={`rounded-2xl p-4 shadow-xl border flex items-start gap-3 backdrop-blur-md ${
+                activeNotification.type === 'success'
+                  ? 'bg-emerald-900/95 text-white border-emerald-700'
+                  : activeNotification.type === 'warning'
+                  ? 'bg-amber-900/95 text-white border-amber-700'
+                  : 'bg-stone-900/95 text-white border-stone-700'
+              }`}
+            >
+              <div className="flex-1 text-xs">
+                <span className="font-bold text-sm block mb-0.5">
+                  {activeNotification.title}
+                </span>
+                <p className="opacity-90">{activeNotification.message}</p>
+              </div>
+              <button
+                onClick={() => setActiveNotification(null)}
+                aria-label="Dismiss notification"
+                className="text-stone-400 hover:text-white text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Main Page Content */}
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 focus:outline-none">
+          {currentTab === 'landing' && (
+            <LandingPage
+              onStartPlanning={() => setCurrentTab('create')}
+              onLaunchDemo={() => setCurrentTab('dashboard')}
+              activeEvent={activeEvent}
+            />
+          )}
 
         {currentTab === 'dashboard' && (
           <DashboardPage
@@ -319,18 +334,19 @@ export default function App() {
         activeEvent={activeEvent}
       />
 
-      {/* Global Budget Optimization Modal (when opened from any screen) */}
-      <BudgetOptimizationModal
-        isOpen={isOptimizerOpen}
-        onClose={() => setIsOptimizerOpen(false)}
-        optimizationResult={optimizeBudget(
-          activeEvent.totalBudget,
-          activeEvent.categories,
-          activeEvent.items
-        )}
-        activeEvent={activeEvent}
-        onApplyAdjustments={handleApplyAdjustmentsFromModal}
-      />
-    </div>
+        {/* Global Budget Optimization Modal (when opened from any screen) */}
+        <BudgetOptimizationModal
+          isOpen={isOptimizerOpen}
+          onClose={() => setIsOptimizerOpen(false)}
+          optimizationResult={optimizeBudget(
+            activeEvent.totalBudget,
+            activeEvent.categories,
+            activeEvent.items
+          )}
+          activeEvent={activeEvent}
+          onApplyAdjustments={handleApplyAdjustmentsFromModal}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }

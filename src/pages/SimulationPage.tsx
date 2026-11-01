@@ -1,31 +1,30 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @file SimulationPage.tsx
+ * @description Mid-flight stress simulation laboratory allowing real-time parameter tweaking
+ * (guest surges, budget cuts, vendor cancellations, date shifts) and multi-dimensional diffing.
+ */
+
 import React, { useState } from 'react';
 import {
-  FlaskConical,
   Play,
-  TrendingDown,
-  Clock,
-  Users,
-  AlertTriangle,
-  ShieldCheck,
-  CheckCircle2,
-  Sparkles,
-  RotateCcw,
-  Layers,
-  ArrowRight,
   History,
   Bot,
   Sliders,
-  DollarSign,
-  Building2,
 } from 'lucide-react';
 import {
   EventPlan,
   SimulationScenario,
   SimulationResult,
-  ScenarioType,
 } from '../types';
 import { simulateScenario, commitSimulationToEvent } from '../logic/scenarioSimulator';
 import { fetchStressSimulationAnalysis } from '../logic/geminiService';
+import { BeforeAfterMatrix } from '../components/simulation/BeforeAfterMatrix';
+import { RecoveryPlanList } from '../components/simulation/RecoveryPlanList';
 import confetti from 'canvas-confetti';
 
 interface SimulationPageProps {
@@ -37,7 +36,6 @@ interface SimulationPageProps {
 export const SimulationPage: React.FC<SimulationPageProps> = ({
   activeEvent,
   onUpdateEvent,
-  onResetDemo,
 }) => {
   // Preset scenarios
   const presetScenarios: SimulationScenario[] = [
@@ -303,9 +301,9 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           </div>
 
           <div className="flex flex-col justify-between">
-            <label className="font-semibold text-stone-700 block mb-1">
+            <span className="font-semibold text-stone-700 block mb-1">
               Simulate Vendor Drop:
-            </label>
+            </span>
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -393,149 +391,13 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           </div>
 
           {/* Before vs After Comparison Matrix */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-xs">
-            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider mb-4">
-              Before vs After Multi-Dimensional Comparison
-            </h3>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-stone-200 bg-stone-50/70 text-stone-500 uppercase tracking-wider font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Metric</th>
-                    <th className="py-3 px-4">Baseline Plan (Before)</th>
-                    <th className="py-3 px-4">Simulated Reality (After)</th>
-                    <th className="py-3 px-4">Variance / Impact</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  <tr>
-                    <td className="py-3 px-4 font-bold text-stone-900">Total Budget Ceiling</td>
-                    <td className="py-3 px-4 font-mono">
-                      {activeEvent.currency}{currentResult.before.totalBudget.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold">
-                      {activeEvent.currency}{currentResult.after.totalBudget.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 font-bold text-stone-700">
-                      {currentResult.budgetDiff.budgetDelta !== 0
-                        ? `${currentResult.budgetDiff.budgetDelta > 0 ? '+' : ''}${activeEvent.currency}${currentResult.budgetDiff.budgetDelta.toLocaleString()}`
-                        : 'No change'}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3 px-4 font-bold text-stone-900">Projected Expenses</td>
-                    <td className="py-3 px-4 font-mono">
-                      {activeEvent.currency}{currentResult.before.totalEstimated.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold">
-                      {activeEvent.currency}{currentResult.after.totalEstimated.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 font-bold text-rose-600">
-                      {currentResult.budgetDiff.overspend > 0
-                        ? `Deficit +${activeEvent.currency}${currentResult.budgetDiff.overspend.toLocaleString()}`
-                        : 'Within budget'}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3 px-4 font-bold text-stone-900">Guest Headcount</td>
-                    <td className="py-3 px-4 font-mono">{currentResult.before.guestCount} Pax</td>
-                    <td className="py-3 px-4 font-mono font-bold">{currentResult.after.guestCount} Pax</td>
-                    <td className="py-3 px-4 font-bold text-stone-700">
-                      {currentResult.after.guestCount - currentResult.before.guestCount !== 0
-                        ? `${currentResult.after.guestCount - currentResult.before.guestCount > 0 ? '+' : ''}${currentResult.after.guestCount - currentResult.before.guestCount} Guests`
-                        : '0'}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3 px-4 font-bold text-stone-900">Venue Seating Headroom</td>
-                    <td className="py-3 px-4 font-mono">220 Capacity (Pass)</td>
-                    <td className="py-3 px-4 font-mono font-bold">
-                      {currentResult.capacityIssues.hasCapacityDeficit ? (
-                        <span className="text-rose-600 font-bold">
-                          220 Capacity (-{currentResult.capacityIssues.shortfall} Shortfall)
-                        </span>
-                      ) : (
-                        <span className="text-emerald-600 font-bold">Comfortable (+{220 - currentResult.after.guestCount} seats)</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      {currentResult.capacityIssues.hasCapacityDeficit ? (
-                        <span className="rounded bg-rose-100 text-rose-800 px-2 py-0.5 text-[10px] font-bold uppercase">
-                          Exceeds Hall Limit
-                        </span>
-                      ) : (
-                        <span className="text-emerald-700 font-medium">Clear</span>
-                      )}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="py-3 px-4 font-bold text-stone-900">Project Duration & Deadline</td>
-                    <td className="py-3 px-4 font-mono">
-                      {currentResult.before.projectDurationDays} / {currentResult.before.eventDeadlineDays} Days
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold">
-                      {currentResult.after.projectDurationDays} / {currentResult.after.eventDeadlineDays} Days
-                    </td>
-                    <td className="py-3 px-4">
-                      {currentResult.timelineDiff.deadlineBreached ? (
-                        <span className="text-rose-600 font-bold">
-                          +{currentResult.timelineDiff.daysOverdue} Days Past Deadline!
-                        </span>
-                      ) : (
-                        <span className="text-emerald-600 font-medium">On-Time</span>
-                      )}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <BeforeAfterMatrix
+            activeEvent={activeEvent}
+            currentResult={currentResult}
+          />
 
           {/* Actionable Recovery Plan */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider">
-                  Algorithmic Recovery Strategy Plan
-                </h3>
-                <p className="text-xs text-stone-500">
-                  Step-by-step mitigation actions formulated to bring the event back to 100% feasibility
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {currentResult.recoveryPlan.map((step) => (
-                <div
-                  key={step.stepNumber}
-                  className="flex items-start justify-between rounded-xl border border-stone-200 bg-stone-50 p-4 text-xs"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-700 text-white font-bold shrink-0">
-                      {step.stepNumber}
-                    </span>
-                    <div>
-                      <span className="font-bold text-stone-900 text-sm block">
-                        {step.title}
-                      </span>
-                      <p className="text-stone-600 mt-0.5 font-medium">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span className="rounded-lg bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-bold shrink-0">
-                    {step.impactMetric}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RecoveryPlanList recoveryPlan={currentResult.recoveryPlan} />
 
           {/* Gemini AI Strategic Analysis Box */}
           <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 p-6 shadow-xs">

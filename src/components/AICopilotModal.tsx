@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Send, Bot, Sparkles, User, Lightbulb, MessageSquare } from 'lucide-react';
 import { EventPlan } from '../types';
 import { askAIConsultant } from '../logic/geminiService';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface AICopilotModalProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ export const AICopilotModal: React.FC<AICopilotModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const modalRef = useModalFocusTrap(isOpen, onClose);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: 'assistant',
@@ -31,15 +34,6 @@ export const AICopilotModal: React.FC<AICopilotModalProps> = ({
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Keyboard accessibility: Close on Escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   const quickPrompts = [
     'How do I negotiate my decoration quote down by 20%?',
@@ -96,7 +90,9 @@ export const AICopilotModal: React.FC<AICopilotModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-2xl h-[650px] max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-stone-200 overflow-hidden"
+        ref={modalRef}
+        className="relative w-full max-w-2xl h-[650px] max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-stone-200 overflow-hidden focus:outline-none"
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="copilot-title"
