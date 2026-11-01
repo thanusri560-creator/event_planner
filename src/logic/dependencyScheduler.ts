@@ -1,7 +1,43 @@
+/**
+ * @file dependencyScheduler.ts
+ * @description Directed Acyclic Graph (DAG) scheduling engine implementing the Critical Path Method (CPM).
+ *
+ * Mathematical Foundations:
+ * 1. Topological Sort via Kahn's Algorithm:
+ *    Maintains an in-degree map for all vertices V. Vertices with in_degree(v) = 0 are enqueued.
+ *    Time Complexity: O(V + E), Space Complexity: O(V + E).
+ *    If processed vertices count !== |V|, a cycle (directed loop) exists.
+ *
+ * 2. Forward Pass (Earliest Time Computation):
+ *    - For root vertices (no predecessors):
+ *        ES_v = 0 + delay_v
+ *        EF_v = ES_v + duration_v
+ *    - For dependent vertices:
+ *        ES_v = max_{u in Pred(v)} (EF_u) + delay_v
+ *        EF_v = ES_v + duration_v
+ *    - Total Project Duration: T_proj = max_{v in V} (EF_v)
+ *
+ * 3. Backward Pass (Latest Time & Float Computation):
+ *    - Terminal deadline: T_target = max(eventDeadlineDays, T_proj)
+ *    - For terminal vertices (no successors):
+ *        LF_v = eventDeadlineDays
+ *        LS_v = LF_v - duration_v
+ *    - For non-terminal vertices:
+ *        LF_v = min_{w in Succ(v)} (LS_w - delay_w)
+ *        LS_v = LF_v - duration_v
+ *
+ * 4. Total Float (Slack) & Critical Path:
+ *    - TF_v = LS_v - ES_v = LF_v - EF_v
+ *    - Critical Path Criterion: Tasks with slack = min_{k} (TF_k) form the zero-slack/longest chain.
+ *    - Conflict Condition: EF_v > eventDeadlineDays (negative float relative to event celebration day).
+ */
+
 import { Task, DAGScheduleResult } from '../types';
 
 /**
- * Validates DAG for cycles and produces a topological sort of task IDs
+ * Validates DAG for cycles and produces a topological sort of task IDs using Kahn's algorithm.
+ * @param tasks - The array of tasks representing nodes in the graph
+ * @returns Sorted task IDs, cycle presence flag, and offending cycle node IDs
  */
 export function topologicalSort(tasks: Task[]): { sortedIds: string[]; hasCycles: boolean; cycleNodes?: string[] } {
   const inDegree = new Map<string, number>();

@@ -4,6 +4,7 @@ export interface AIConsultantResponse {
   success: boolean;
   answer: string;
   fallback?: boolean;
+  cached?: boolean;
   error?: string;
 }
 
@@ -11,22 +12,46 @@ export interface AIBudgetRationaleResponse {
   success: boolean;
   rationale: string;
   fallback?: boolean;
+  cached?: boolean;
 }
 
 export interface AIStressAnalysisResponse {
   success: boolean;
   analysis: string;
   fallback?: boolean;
+  cached?: boolean;
+}
+
+// Client-side in-memory response cache for rapid tab switches
+const clientCache = new Map<string, { data: unknown; timestamp: number }>();
+const CLIENT_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function getClientCached<T>(key: string): T | null {
+  const entry = clientCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CLIENT_CACHE_TTL) {
+    clientCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setClientCached<T>(key: string, data: T): void {
+  clientCache.set(key, { data, timestamp: Date.now() });
 }
 
 /**
- * Client-side service calling secure server endpoints
+ * Client-side service calling secure server endpoints with caching and graceful fallbacks
  */
 export async function askAIConsultant(
   event: EventPlan,
   question: string,
-  context?: Record<string, any>
+  context?: { criticalTasks?: string[]; budgetDeficit?: number }
 ): Promise<AIConsultantResponse> {
+  const cacheKey = `client:consultant:${question.trim().toLowerCase()}`;
+  const cached = getClientCached<AIConsultantResponse>(cacheKey);
+  if (cached) return cached;
+
   try {
     const eventSummary = {
       name: event.name,
@@ -54,13 +79,18 @@ export async function askAIConsultant(
     }
 
     const data = await res.json();
-    return {
+    const result: AIConsultantResponse = {
       success: true,
       answer: data.answer || 'Consultant response received.',
-      fallback: data.fallback,
+      fallback: Boolean(data.fallback),
+      cached: Boolean(data.cached),
     };
-  } catch (error: any) {
-    console.warn('AI Consultant call failed, falling back to local reasoning:', error);
+
+    setClientCached(cacheKey, result);
+    return result;
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.warn('AI Consultant call failed, falling back to local reasoning:', errMsg);
     return {
       success: true,
       fallback: true,
@@ -80,6 +110,10 @@ export async function fetchBudgetOptimizationRationale(
   overspendAmount: number,
   adjustments: ProposedAdjustment[]
 ): Promise<AIBudgetRationaleResponse> {
+  const cacheKey = `client:rationale:${overspendAmount}:${adjustments.length}`;
+  const cached = getClientCached<AIBudgetRationaleResponse>(cacheKey);
+  if (cached) return cached;
+
   try {
     const eventSummary = {
       name: event.name,
@@ -106,12 +140,18 @@ export async function fetchBudgetOptimizationRationale(
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return {
+    const result: AIBudgetRationaleResponse = {
       success: true,
       rationale: data.rationale,
-      fallback: data.fallback,
+      fallback: Boolean(data.fallback),
+      cached: Boolean(data.cached),
     };
-  } catch (err) {
+
+    setClientCached(cacheKey, result);
+    return result;
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.warn('Rationale fetch failed:', errMsg);
     return {
       success: true,
       fallback: true,
@@ -131,6 +171,10 @@ export async function fetchStressSimulationAnalysis(
   scenario: SimulationScenario,
   simulationResult: SimulationResult
 ): Promise<AIStressAnalysisResponse> {
+  const cacheKey = `client:stress:${scenario.id}:${simulationResult.feasibilityScore}`;
+  const cached = getClientCached<AIStressAnalysisResponse>(cacheKey);
+  if (cached) return cached;
+
   try {
     const eventSummary = {
       name: event.name,
@@ -150,12 +194,18 @@ export async function fetchStressSimulationAnalysis(
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return {
+    const result: AIStressAnalysisResponse = {
       success: true,
       analysis: data.analysis,
-      fallback: data.fallback,
+      fallback: Boolean(data.fallback),
+      cached: Boolean(data.cached),
     };
-  } catch (err) {
+
+    setClientCached(cacheKey, result);
+    return result;
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.warn('Stress analysis failed:', errMsg);
     return {
       success: true,
       fallback: true,

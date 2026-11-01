@@ -243,45 +243,60 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
           <div>
-            <label className="font-semibold text-stone-700 block mb-1">
+            <label htmlFor="customGuestSlider" className="font-semibold text-stone-700 block mb-1">
               Guest Count Shift: <span className="font-bold text-purple-700">{customGuestDelta > 0 ? `+${customGuestDelta}` : customGuestDelta} guests</span>
             </label>
             <input
+              id="customGuestSlider"
               type="range"
               min="-50"
               max="100"
               step="10"
               value={customGuestDelta}
+              aria-label="Guest count delta slider"
+              aria-valuemin={-50}
+              aria-valuemax={100}
+              aria-valuenow={customGuestDelta}
               onChange={(e) => setCustomGuestDelta(parseInt(e.target.value))}
               className="w-full accent-purple-600 cursor-pointer"
             />
           </div>
 
           <div>
-            <label className="font-semibold text-stone-700 block mb-1">
+            <label htmlFor="customBudgetSlider" className="font-semibold text-stone-700 block mb-1">
               Budget Delta: <span className="font-bold text-purple-700">{customBudgetPercent}%</span>
             </label>
             <input
+              id="customBudgetSlider"
               type="range"
               min="-40"
               max="20"
               step="5"
               value={customBudgetPercent}
+              aria-label="Budget percentage delta slider"
+              aria-valuemin={-40}
+              aria-valuemax={20}
+              aria-valuenow={customBudgetPercent}
               onChange={(e) => setCustomBudgetPercent(parseInt(e.target.value))}
               className="w-full accent-purple-600 cursor-pointer"
             />
           </div>
 
           <div>
-            <label className="font-semibold text-stone-700 block mb-1">
+            <label htmlFor="customDaysSlider" className="font-semibold text-stone-700 block mb-1">
               Date Shift: <span className="font-bold text-purple-700">{customDaysDelta} days</span>
             </label>
             <input
+              id="customDaysSlider"
               type="range"
               min="-10"
               max="10"
               step="1"
               value={customDaysDelta}
+              aria-label="Event deadline days shift slider"
+              aria-valuemin={-10}
+              aria-valuemax={10}
+              aria-valuenow={customDaysDelta}
               onChange={(e) => setCustomDaysDelta(parseInt(e.target.value))}
               className="w-full accent-purple-600 cursor-pointer"
             />

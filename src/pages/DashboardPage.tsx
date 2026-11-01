@@ -18,8 +18,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { EventPlan } from '../types';
-import { calculateTotalEstimated, optimizeBudget } from '../logic/budgetOptimizer';
-import { calculateSchedule } from '../logic/dependencyScheduler';
+import { useEventEngine } from '../hooks/useEventEngine';
 
 interface DashboardPageProps {
   activeEvent: EventPlan;
@@ -40,16 +39,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onTriggerScenario2,
   onTriggerScenario3,
 }) => {
-  const totalEstimated = calculateTotalEstimated(activeEvent.items);
-  const overspend = Math.max(0, totalEstimated - activeEvent.totalBudget);
-  const budgetUtilization = Math.round((totalEstimated / activeEvent.totalBudget) * 100);
-  const budgetRemaining = activeEvent.totalBudget - totalEstimated;
+  const {
+    totalEstimated,
+    overspend,
+    budgetUtilization,
+    budgetRemaining,
+    scheduleResult: schedule,
+    progressPercent,
+  } = useEventEngine(activeEvent);
 
-  const schedule = calculateSchedule(activeEvent.tasks, activeEvent.eventDeadlineDays);
   const criticalTasks = schedule.tasks.filter((t) => t.isCriticalPath);
   const completedTasks = activeEvent.tasks.filter((t) => t.status === 'completed');
-  const progressPercent = Math.round((completedTasks.length / activeEvent.tasks.length) * 100);
-
   const delayedTasks = schedule.tasks.filter((t) => (t.delayDays || 0) > 0);
   const conflictTasks = schedule.tasks.filter((t) => t.hasConflict);
 

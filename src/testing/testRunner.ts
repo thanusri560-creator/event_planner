@@ -21,6 +21,7 @@ import {
   commitSimulationToEvent,
 } from '../logic/scenarioSimulator';
 import { createSampleCollegeEvent, createNewEvent } from '../logic/eventPlanner';
+import { sanitizeInput, validateEventInput } from '../logic/validation';
 
 export interface TestCaseResult {
   suite: 'Unit' | 'Integration' | 'EdgeCase' | 'Stress';
@@ -62,15 +63,17 @@ export async function runAllAutomatedTests(): Promise<TestSuiteSummary> {
         durationMs: Math.round((t1 - t0) * 100) / 100,
         message: 'Assertion passed successfully.',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       const t1 = performance.now();
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
       results.push({
         suite,
         name,
         passed: false,
         durationMs: Math.round((t1 - t0) * 100) / 100,
-        message: err.message || 'Assertion failed',
-        details: err.stack,
+        message: errorMsg || 'Assertion failed',
+        details: stack,
       });
     }
   };
@@ -542,6 +545,44 @@ export async function runAllAutomatedTests(): Promise<TestSuiteSummary> {
     const elapsed = performance.now() - t0;
     if (elapsed > 500) {
       throw new Error(`50 consecutive simulations took ${elapsed.toFixed(2)}ms (limit 500ms)`);
+    }
+  });
+
+  runTest('EdgeCase', 'Input Sanitization & Injection Protection', () => {
+    const maliciousInput = "<script>alert('xss')</script>Annual Gala; DROP TABLE events;";
+    const sanitized = sanitizeInput(maliciousInput);
+    if (sanitized.includes('<script>') || sanitized.includes(';')) {
+      throw new Error(`Sanitization failed to strip dangerous tokens: ${sanitized}`);
+    }
+
+    const invalidParams = {
+      name: '',
+      type: 'wedding' as const,
+      totalBudget: -5000,
+      guestCount: 0,
+      eventDeadlineDays: -2,
+      location: '',
+    };
+    const validation = validateEventInput(invalidParams);
+    if (validation.isValid) {
+      throw new Error('Validation must reject negative budgets and zero guests');
+    }
+    if (validation.issues.length < 3) {
+      throw new Error(`Expected at least 3 validation errors, got ${validation.issues.length}`);
+    }
+  });
+
+  runTest('Stress', 'Sub-Millisecond Engine Cache Benchmark (100 Iterations)', () => {
+    const event = createSampleCollegeEvent();
+    const t0 = performance.now();
+    for (let i = 0; i < 100; i++) {
+      calculateTotalEstimated(event.items);
+      aggregateByCategory(event.categories, event.items);
+    }
+    const elapsed = performance.now() - t0;
+    const avgPerRun = elapsed / 100;
+    if (avgPerRun > 1.0) {
+      throw new Error(`Average calculation exceeded 1.0ms: ${avgPerRun.toFixed(3)}ms`);
     }
   });
 

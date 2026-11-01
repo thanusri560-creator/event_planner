@@ -13,9 +13,12 @@ import {
   GlassWater,
   ArrowRight,
   Bot,
+  AlertCircle,
+  type LucideIcon,
 } from 'lucide-react';
 import { EventType, PriorityLevel, EventPlan } from '../types';
 import { createNewEvent } from '../logic/eventPlanner';
+import { validateEventInput } from '../logic/validation';
 
 interface CreateEventPageProps {
   onEventCreated: (newEvent: EventPlan) => void;
@@ -34,13 +37,14 @@ export const CreateEventPage: React.FC<CreateEventPageProps> = ({
   const [daysHorizon, setDaysHorizon] = useState<number>(30);
   const [location, setLocation] = useState('University Campus Auditorium, Pune');
   const [theme, setTheme] = useState('Radiant Horizons');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // AI Prompt Assistant
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[] | null>(null);
 
-  const eventTypes: { type: EventType; label: string; icon: any; defaultBudget: number; defaultGuests: number }[] = [
+  const eventTypes: { type: EventType; label: string; icon: LucideIcon; defaultBudget: number; defaultGuests: number }[] = [
     { type: 'college_festival', label: 'College Festival', icon: GraduationCap, defaultBudget: 200000, defaultGuests: 200 },
     { type: 'wedding', label: 'Wedding Celebration', icon: Heart, defaultBudget: 1500000, defaultGuests: 350 },
     { type: 'birthday', label: 'Birthday Party', icon: Cake, defaultBudget: 75000, defaultGuests: 60 },
@@ -89,6 +93,22 @@ export const CreateEventPage: React.FC<CreateEventPageProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+
+    const validation = validateEventInput({
+      name,
+      type: eventType,
+      totalBudget: budget,
+      guestCount,
+      eventDeadlineDays: daysHorizon,
+      location,
+    });
+
+    if (!validation.isValid) {
+      setValidationError(validation.issues.map((i) => i.message).join(' '));
+      return;
+    }
+
     const newEvent = createNewEvent({
       name: name.trim(),
       type: eventType,
@@ -113,6 +133,13 @@ export const CreateEventPage: React.FC<CreateEventPageProps> = ({
           Configure interconnected constraints, guest scaling ratios, and budget priorities.
         </p>
       </div>
+
+      {validationError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+          <span>{validationError}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Step 1: Celebration Type */}
@@ -312,7 +339,7 @@ export const CreateEventPage: React.FC<CreateEventPageProps> = ({
           {aiSuggestions && (
             <div className="mt-3 rounded-xl border border-purple-200 bg-white p-3 text-xs text-stone-700 space-y-1">
               <span className="font-bold text-purple-900 block">AI Strategic Recommendations:</span>
-              {aiSuggestions.map((s, idx) => (
+              {aiSuggestions.map((s: string, idx: number) => (
                 <p key={idx} className="whitespace-pre-line leading-relaxed">• {s}</p>
               ))}
             </div>

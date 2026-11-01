@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   GitBranch,
   Clock,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { EventPlan, Task, TaskStatus } from '../types';
 import { calculateSchedule, applyTaskDelay, formatDayOffset } from '../logic/dependencyScheduler';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface TimelinePageProps {
   activeEvent: EventPlan;
@@ -31,8 +32,13 @@ export const TimelinePage: React.FC<TimelinePageProps> = ({
   const [delaySliderDays, setDelaySliderDays] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'gantt' | 'table' | 'network'>('gantt');
 
-  // Compute live DAG schedule
-  const scheduleResult = calculateSchedule(activeEvent.tasks, activeEvent.eventDeadlineDays);
+  // Debounced slider state for smooth performance
+  const debouncedDelayDays = useDebounce(delaySliderDays, 150);
+
+  // Memoize DAG schedule computation
+  const scheduleResult = useMemo(() => {
+    return calculateSchedule(activeEvent.tasks, activeEvent.eventDeadlineDays);
+  }, [activeEvent.tasks, activeEvent.eventDeadlineDays]);
 
   const handleUpdateTaskStatus = (taskId: string, newStatus: TaskStatus) => {
     const updatedTasks = activeEvent.tasks.map((t) =>
@@ -260,15 +266,20 @@ export const TimelinePage: React.FC<TimelinePageProps> = ({
 
           <div className="flex-1 min-w-[220px]">
             <div className="flex items-center justify-between mb-1">
-              <label className="font-semibold text-stone-700">
+              <label htmlFor="timelineDelaySlider" className="font-semibold text-stone-700">
                 Injected Delay: <span className="text-purple-700 font-bold">+{delaySliderDays} Days</span>
               </label>
             </div>
             <input
+              id="timelineDelaySlider"
               type="range"
               min="0"
               max="10"
               value={delaySliderDays}
+              aria-label="Injected task delay days slider"
+              aria-valuemin={0}
+              aria-valuemax={10}
+              aria-valuenow={delaySliderDays}
               onChange={(e) => setDelaySliderDays(parseInt(e.target.value))}
               className="w-full accent-purple-600 cursor-pointer"
             />

@@ -68,7 +68,7 @@ export const TestingPage: React.FC = () => {
               className="flex items-center gap-2 rounded-xl bg-purple-700 hover:bg-purple-800 px-4 py-2 text-xs font-bold text-white shadow-sm transition disabled:opacity-50"
             >
               <Play className="h-4 w-4 fill-white" />
-              <span>{isRunning ? 'Running 23 Tests...' : 'Re-Run All 23 Tests'}</span>
+              <span>{isRunning ? 'Running Tests...' : `Re-Run All ${suiteSummary?.total || 25} Tests`}</span>
             </button>
           </div>
         </div>
@@ -139,7 +139,7 @@ export const TestingPage: React.FC = () => {
                 : 'bg-white text-stone-600 hover:bg-stone-50 border border-stone-200'
             }`}
           >
-            {s === 'all' ? `All Suites (${suiteSummary?.total || 23})` : s}
+            {s === 'all' ? `All Suites (${suiteSummary?.total || 25})` : s}
           </button>
         ))}
       </div>

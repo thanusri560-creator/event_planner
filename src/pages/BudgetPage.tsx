@@ -23,12 +23,11 @@ import {
   ProposedAdjustment,
 } from '../types';
 import {
-  calculateTotalEstimated,
-  optimizeBudget,
   aggregateByCategory,
   applyApprovedAdjustments,
 } from '../logic/budgetOptimizer';
 import { BudgetOptimizationModal } from '../components/BudgetOptimizationModal';
+import { useEventEngine } from '../hooks/useEventEngine';
 
 interface BudgetPageProps {
   activeEvent: EventPlan;
@@ -53,16 +52,12 @@ export const BudgetPage: React.FC<BudgetPageProps> = ({
   const [newItemCost, setNewItemCost] = useState(5000);
   const [newItemPriority, setNewItemPriority] = useState<PriorityLevel>('medium');
 
-  const totalEstimated = calculateTotalEstimated(activeEvent.items);
-  const overspend = Math.max(0, totalEstimated - activeEvent.totalBudget);
-  const isOverBudget = totalEstimated > activeEvent.totalBudget;
-
-  // Run optimizer calculation
-  const optimizationResult = optimizeBudget(
-    activeEvent.totalBudget,
-    activeEvent.categories,
-    activeEvent.items
-  );
+  const {
+    totalEstimated,
+    overspend,
+    isOverBudget,
+    optimizationResult,
+  } = useEventEngine(activeEvent);
 
   // Handle category priority change
   const handleCategoryPriorityChange = (category: BudgetCategory, newPriority: PriorityLevel) => {

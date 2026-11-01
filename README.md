@@ -2,7 +2,7 @@
 **Challenge 5: AI-Powered Celebration & Event Planner**
 
 [![Live App](https://img.shields.io/badge/Live_App-Ready-success?style=for-the-badge&logo=google-cloud)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
-[![Tests Passing](https://img.shields.io/badge/Automated_Tests-23%2F23_Passed-emerald?style=for-the-badge&logo=vitest)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
+[![Tests Passing](https://img.shields.io/badge/Automated_Tests-25%2F25_Passed-emerald?style=for-the-badge&logo=vitest)](https://ais-pre-6cnysvz5kpmysupooar6yu-554095704087.asia-southeast1.run.app)
 [![Model](https://img.shields.io/badge/Model-Gemini_3.8_Flash-purple?style=for-the-badge&logo=google-gemini)](https://ai.google.dev/)
 [![Accessibility](https://img.shields.io/badge/WCAG-2.2_AA_Compliant-blue?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 
@@ -76,7 +76,7 @@ A demonstration banner is pinned to the top of the application loaded with the o
 
 ---
 
-## 🧪 Automated Testing Suite (23 Tests)
+## 🧪 Automated Testing Suite (25 Tests)
 
 The repository features comprehensive automated tests runnable via CLI and directly inside the web UI:
 
@@ -89,8 +89,8 @@ npm test
 | :--- | :---: | :--- |
 | **Unit Tests** | **7** | Allocation calculations, overrun detection, priority preservation, DAG CPM passes, delay cascading, critical path identification, per-plate scaling. |
 | **Integration Tests** | **5** | Event creation & persistence, budget-to-dashboard state sync, multi-task delay propagation, catering headcount scaling, budget cut triggers. |
-| **Edge-Case Tests** | **8** | Zero/negative budgets, negative guest counts, missing dependencies, circular task loop detection, multi-delay propagation, sub-floor budgets, venue capacity deficit, inverted deadlines. |
-| **Stress Tests** | **3** | Synthetic **500+ task DAG scheduling** (<10ms runtime), **1,000+ guest headcount scaling**, **50 rapid consecutive mid-flight simulations**. |
+| **Edge-Case Tests** | **9** | Zero/negative budgets, negative guest counts, missing dependencies, circular task loops, multi-delay propagation, sub-floor budgets, venue capacity deficit, inverted deadlines, input sanitization & script injection protection. |
+| **Stress Tests** | **4** | Synthetic **500+ task DAG scheduling** (<10ms runtime), **1,000+ guest headcount scaling**, **50 rapid consecutive mid-flight simulations**, **Sub-millisecond engine cache benchmark**. |
 
 > Inspect test logs, execution timings, and live assertions anytime under the **Test Suite** tab in the top navigation.
 

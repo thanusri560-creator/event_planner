@@ -1,3 +1,36 @@
+/**
+ * @file budgetOptimizer.ts
+ * @description Priority-Aware Deterministic Budget Optimization Engine.
+ *
+ * Mathematical Formulation:
+ * Let B be the total event budget ceiling.
+ * Let I = {item_1, item_2, ..., item_n} be the set of expense items.
+ * Each item_i has:
+ *   - c_i: current estimated cost
+ *   - m_i: minimum viable cost floor (m_i <= c_i) below which quality degrades
+ *   - p_i in {high, medium, low}: priority tier
+ *
+ * Total estimated expenditure: S = sum_{i=1}^n c_i
+ * Overspend deficit: Delta = max(0, S - B)
+ * Reducible margin per item: R_i = max(0, c_i - m_i)
+ *
+ * Proportional Relaxation Protocol:
+ * 1. Low Priority Phase:
+ *    Let L = {i | p_i = low, R_i > 0}.
+ *    Total low-tier reducible capacity: R_low = sum_{i in L} R_i.
+ *    If R_low > 0: cutRatio = min(1.0, Delta / R_low).
+ *    delta_i = round(R_i * cutRatio). Delta_remaining = Delta - sum delta_i.
+ *
+ * 2. Medium Priority Phase:
+ *    If Delta_remaining > 0:
+ *    Let M = {i | p_i = medium, R_i > 0}.
+ *    Repeat proportional scaling over M until Delta_remaining = 0 or M exhausted.
+ *
+ * 3. High Priority Shielding:
+ *    Items with p_i = high are shielded from mandatory reductions to preserve
+ *    foundational guest hospitality (e.g. food quality and venue safety).
+ */
+
 import {
   BudgetCategory,
   BudgetItem,
